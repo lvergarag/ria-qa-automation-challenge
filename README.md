@@ -406,3 +406,23 @@ Ejecución exitosa del escenario automatizado de envío de dinero en Ria Money T
 - 8 pasos aprobados.
 
 ![Resultado ejecución Selenium y Cucumber](screenshots/selenium-test-result.png)
+
+## Ejecución del proyecto
+
+Para ejecutar la automatización, abrir una terminal desde la raíz del proyecto y seguir los siguientes pasos:
+
+### 1. Instalar las dependencias
+
+```bash
+npm install
+```
+
+Esperar hasta que finalice completamente la instalación de las dependencias.
+
+### 2. Ejecutar el escenario automatizado
+
+```bash
+npm run test:send-money
+```
+
+Este comando ejecuta el escenario automatizado E2E de envío de dinero utilizando Selenium WebDriver y Cucumber.
