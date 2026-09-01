@@ -393,3 +393,16 @@ Selector principal del monto:
 ```css
 input[analytics-name="send-money-amount-from-amount"]
 ```
+## Evidencia de ejecución
+
+### Selenium + Cucumber — Flujo E2E
+
+Ejecución exitosa del escenario automatizado de envío de dinero en Ria Money Transfer.
+
+**Resultado:**
+- 1 escenario ejecutado.
+- 1 escenario aprobado.
+- 8 pasos ejecutados.
+- 8 pasos aprobados.
+
+![Resultado ejecución Selenium y Cucumber](screenshots/selenium-test-result.png)
