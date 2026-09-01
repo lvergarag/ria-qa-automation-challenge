@@ -1,0 +1,21 @@
+{
+  "name": "ria-qa-automation-challenge",
+  "version": "41.0.0",
+  "description": "Ria QA Challenge - clean Selenium WebDriver automation with Chrome",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:login": "cucumber-js --tags @login",
+    "test:calculator": "cucumber-js --tags @calculadora",
+    "test:report": "cucumber-js --format html:reports/cucumber-report.html",
+    "test:otp": "cucumber-js --tags @otp",
+    "test:transfer": "cucumber-js --tags @transferencia",
+    "test:send-money": "cucumber-js --tags @sendmoney"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.0.0",
+    "selenium-webdriver": "^4.35.0"
+  }
+}

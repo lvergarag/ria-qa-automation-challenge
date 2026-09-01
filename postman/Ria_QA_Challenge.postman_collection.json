@@ -1,0 +1,85 @@
+{
+  "info": {
+    "_postman_id": "ria-qa-challenge-v33",
+    "name": "Ria QA Challenge - QA Engineer Test 6",
+    "description": "Collection aligned with the GET and POST requirements from QA Engineer Test 6.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET - JSONPlaceholder Posts",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"All title and body fields have content and none contain zombie\", function () {",
+              "    const responseData = pm.response.json();",
+              "    pm.expect(responseData).to.be.an(\"array\").that.is.not.empty;",
+              "    responseData.forEach((post, index) => {",
+              "        pm.expect(post.title, `Post ${index} has empty title`).to.be.a(\"string\").and.not.empty;",
+              "        pm.expect(post.body, `Post ${index} has empty body`).to.be.a(\"string\").and.not.empty;",
+              "        pm.expect(post.title.toLowerCase(), `Post ${index} title contains zombie`).to.not.include(\"zombie\");",
+              "        pm.expect(post.body.toLowerCase(), `Post ${index} body contains zombie`).to.not.include(\"zombie\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "https://jsonplaceholder.typicode.com/posts/"
+      }
+    },
+    {
+      "name": "POST - httpbin Topping Validation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 201\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "pm.test(\"Validate toppings and absence of chicken\", function () {",
+              "    const responseData = pm.response.json();",
+              "    const topping = responseData.json.topping;",
+              "    pm.expect(topping).to.include.members([\"bacon\", \"cheese\", \"mushroom\"]);",
+              "    pm.expect(topping).to.not.include(\"chicken\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"student\": \"Tim Allen\",\n  \"email_address\": \"tim@homeimprovement.com\",\n  \"phone\": \"(408) 8674530\",\n  \"current_grade\": \"B+\",\n  \"topping\": [\n    \"bacon\",\n    \"cheese\",\n    \"mushroom\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "https://httpbin.org/post"
+      }
+    }
+  ]
+}
