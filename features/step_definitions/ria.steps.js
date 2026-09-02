@@ -53,6 +53,18 @@ When('ingresa la contraseña configurada', async function () {
   await this.loginPage.enterPassword();
 });
 
+When('deja vacíos los campos de acceso', async function () {
+  await this.loginPage.clearLoginFields();
+});
+
+When('ingresa {string} como correo', async function (email) {
+  await this.loginPage.enterEmailValue(email);
+});
+
+When('ingresa {string} como contraseña', async function (password) {
+  await this.loginPage.enterPasswordValue(password);
+});
+
 When('presiona Iniciar sesión', async function () {
   await this.loginPage.clickLogin();
 });
@@ -71,6 +83,28 @@ Then('llega a la pantalla Enviar dinero', async function () {
   assert.ok(url.includes('/send-money'));
 });
 
+Then('el formulario de login impide continuar sin credenciales', async function () {
+  assert.ok(
+    await this.loginPage.preventsSubmitWithoutCredentials(),
+    'El login permitió avanzar sin credenciales o no mostró validación.'
+  );
+});
+
+Then('se mantiene en la página segura de login', async function () {
+  assert.ok(
+    await this.loginPage.isStillOnLoginPage(),
+    'Se esperaba permanecer en /login y no avanzar al OTP ni al área autenticada.'
+  );
+});
+
+Then('se muestra un mensaje de autenticación fallida', async function () {
+  const message = await this.loginPage.waitForLoginFailureMessage();
+
+  assert.ok(
+    message,
+    'No se encontró un mensaje visible de rechazo de credenciales.'
+  );
+});
 
 Then('la moneda de origen es CLP', async function () {
   const currency = await this.homePage.getOriginCurrency();
@@ -145,8 +179,12 @@ Given('que el usuario completa el login y llega a la pantalla Enviar dinero', as
   await this.loginPage.waitForManualOtpEntry();
   await this.loginPage.validateOtp();
 
-  await this.loginPage.waitForRememberDeviceModal();
-  await this.loginPage.declineRememberDevice();
+  try {
+    await this.loginPage.waitForRememberDeviceModal();
+    await this.loginPage.declineRememberDevice();
+  } catch (_) {
+    await this.loginPage.waitForAuthenticatedArea();
+  }
 
   await this.loginPage.waitForAuthenticatedArea();
   await this.loginPage.clickStartTransfer();

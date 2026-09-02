@@ -1,4 +1,4 @@
-const { By, until } = require('selenium-webdriver');
+const { By, until, Key } = require('selenium-webdriver');
 const config = require('../utils/config');
 
 class RiaLoginPage {
@@ -29,6 +29,22 @@ class RiaLoginPage {
       By.css('button[type="submit"]'),
       By.xpath("//button[normalize-space(.)='Iniciar sesión']"),
       By.xpath("//button[normalize-space(.)='Inicia sesión']")
+    ];
+
+    this.loginValidationCandidates = [
+      By.css('[role="alert"]'),
+      By.css('[aria-live="polite"]'),
+      By.css('[aria-live="assertive"]'),
+      By.xpath("//*[contains(normalize-space(.),'obligatorio')]"),
+      By.xpath("//*[contains(normalize-space(.),'requerido')]"),
+      By.xpath("//*[contains(normalize-space(.),'inválid')]"),
+      By.xpath("//*[contains(normalize-space(.),'incorrect')]"),
+      By.xpath("//*[contains(normalize-space(.),'no coinciden')]"),
+      By.xpath("//*[contains(normalize-space(.),'required')]"),
+      By.xpath("//*[contains(normalize-space(.),'invalid')]"),
+      By.xpath("//*[contains(normalize-space(.),'wrong')]"),
+      By.xpath("//*[contains(normalize-space(.),'unable')]"),
+      By.xpath("//*[contains(normalize-space(.),'error')]")
     ];
 
     this.startTransferButton = By.xpath(
@@ -241,18 +257,114 @@ class RiaLoginPage {
     if (!config.email) {
       throw new Error('RIA_EMAIL no está configurado.');
     }
+    await this.enterEmailValue(config.email);
+  }
+
+  async enterEmailValue(value) {
     const email = await this.findFirstVisible(this.emailCandidates);
-    await email.clear();
-    await email.sendKeys(config.email);
+    await this.replaceInputValue(email, value);
   }
 
   async enterPassword() {
     if (!config.password) {
       throw new Error('RIA_PASSWORD no está configurado.');
     }
+    await this.enterPasswordValue(config.password);
+  }
+
+  async enterPasswordValue(value) {
     const password = await this.findFirstVisible(this.passwordCandidates);
-    await password.clear();
-    await password.sendKeys(config.password);
+    await this.replaceInputValue(password, value);
+  }
+
+  async replaceInputValue(input, value) {
+    await this.driver.wait(until.elementIsEnabled(input), config.timeout);
+    await input.click();
+
+    try {
+      await input.clear();
+    } catch (_) {}
+
+    await input.sendKeys(Key.chord(Key.CONTROL, 'a'));
+    await input.sendKeys(Key.BACK_SPACE);
+
+    if (value) {
+      await input.sendKeys(String(value));
+    }
+  }
+
+  async clearLoginFields() {
+    const email = await this.findFirstVisible(this.emailCandidates);
+    const password = await this.findFirstVisible(this.passwordCandidates);
+
+    await this.replaceInputValue(email, '');
+    await this.replaceInputValue(password, '');
+    await password.sendKeys(Key.TAB);
+  }
+
+  async isLoginButtonEnabled() {
+    const button = await this.findFirstVisible(this.loginButtonCandidates);
+    return await button.isEnabled();
+  }
+
+  async isStillOnLoginPage() {
+    const url = (await this.driver.getCurrentUrl()).toLowerCase();
+    return url.includes('/login') && !url.includes('/otp/login');
+  }
+
+  async getVisibleLoginValidationText(timeout = 10000) {
+    let lastText = '';
+
+    try {
+      await this.driver.wait(async () => {
+        for (const locator of this.loginValidationCandidates) {
+          const elements = await this.driver.findElements(locator);
+
+          for (const element of elements) {
+            try {
+              if (!(await element.isDisplayed())) continue;
+
+              const text = (
+                (await element.getText()) ||
+                (await element.getAttribute('textContent')) ||
+                ''
+              ).trim();
+
+              if (text) {
+                lastText = text;
+                return true;
+              }
+            } catch (_) {}
+          }
+        }
+
+        return false;
+      }, timeout);
+    } catch (_) {
+      return '';
+    }
+
+    return lastText;
+  }
+
+  async preventsSubmitWithoutCredentials() {
+    const buttonEnabled = await this.isLoginButtonEnabled();
+
+    if (buttonEnabled) {
+      await this.clickLogin();
+    }
+
+    const validationText = await this.getVisibleLoginValidationText(5000);
+    return (await this.isStillOnLoginPage()) && (!buttonEnabled || validationText !== '');
+  }
+
+  async waitForLoginFailureMessage() {
+    await this.driver.wait(async () => {
+      return (await this.isStillOnLoginPage()) &&
+        (await this.getVisibleLoginValidationText(2000)) !== '';
+    }, config.timeout);
+
+    return await this.getVisibleLoginValidationText(2000);
   }
 
   async clickLogin() {

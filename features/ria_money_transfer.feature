@@ -4,7 +4,7 @@ Característica: Ria Money Transfer - QA Engineer Test 6
   Quiero validar la calculadora, el acceso seguro y el registro
   Para demostrar los criterios de aceptación del reto
 
-  @calculadora @negativo
+  @calculadora @alternativo @negativo
   Escenario: E2E-01 Validar mensaje al ingresar caracteres alfabéticos
     Dado que el usuario navega a la página principal de Ria Money Transfer
     Cuando ingresa "abc" en el importe
@@ -38,8 +38,29 @@ Característica: Ria Money Transfer - QA Engineer Test 6
     Cuando hace clic en Registrarse
     Entonces es redirigido a la página de selección de país
 
+  @login @alternativo @negativo
+  Escenario: E2E-05 Validar que login no permite continuar sin credenciales
+    Dado que el usuario navega a la página principal de Ria Money Transfer
+    Cuando presiona Start your transfer
+    Entonces llega a la página segura de login
+    Y presiona exactamente Permitir todas las cookies
+    Cuando deja vacíos los campos de acceso
+    Entonces el formulario de login impide continuar sin credenciales
+
+  @login @alternativo @negativo
+  Escenario: E2E-06 Validar rechazo de credenciales inválidas
+    Dado que el usuario navega a la página principal de Ria Money Transfer
+    Cuando presiona Start your transfer
+    Entonces llega a la página segura de login
+    Y presiona exactamente Permitir todas las cookies
+    Cuando ingresa "qa.invalid@example.com" como correo
+    Y ingresa "Password123!" como contraseña
+    Y presiona Iniciar sesión
+    Entonces se mantiene en la página segura de login
+    Y se muestra un mensaje de autenticación fallida
+
   @login @adicional
-  Escenario: E2E-05 Login seguro adicional
+  Escenario: E2E-07 Login seguro adicional
     Dado que el usuario navega a la página principal de Ria Money Transfer
     Cuando presiona Start your transfer
     Entonces llega a la página segura de login
@@ -55,7 +76,7 @@ Característica: Ria Money Transfer - QA Engineer Test 6
 
 
   @otp @transferencia @adicional
-  Escenario: E2E-06 Solicitar y validar clave dinámica
+  Escenario: E2E-08 Solicitar y validar clave dinámica
     Dado que el usuario navega a la página principal de Ria Money Transfer
     Cuando presiona Start your transfer
     Entonces llega a la página segura de login
@@ -73,7 +94,7 @@ Característica: Ria Money Transfer - QA Engineer Test 6
 
 
   @sendmoney @transferencia
-  Escenario: E2E-07 Seleccionar Haití y enviar $25000 CLP a HTG
+  Escenario: E2E-09 Seleccionar Haití y enviar $25000 CLP a HTG
     Dado que el usuario completa el login y llega a la pantalla Enviar dinero
     Cuando selecciona Haití en Estás enviando a
     Cuando ingresa el monto configurado de $25000 CLP en la pantalla Enviar dinero

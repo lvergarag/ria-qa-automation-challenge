@@ -7,8 +7,10 @@
   },
   "scripts": {
     "test": "cucumber-js",
+    "test:alternativos": "cucumber-js --tags @alternativo",
     "test:login": "cucumber-js --tags @login",
     "test:calculator": "cucumber-js --tags @calculadora",
+    "test:postman": "node scripts/capture-postman-runner.js",
     "test:report": "cucumber-js --format html:reports/cucumber-report.html",
     "test:otp": "cucumber-js --tags @otp",
     "test:transfer": "cucumber-js --tags @transferencia",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.0.0",
+    "newman": "^6.2.2",
     "selenium-webdriver": "^4.35.0"
   }
 }

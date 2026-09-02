@@ -74,10 +74,8 @@ El login con credenciales queda como escenario adicional y no reemplaza los crit
 ## Evidencias pendientes para la entrega
 
 Antes de subir a GitHub:
-1. Ejecutar Selenium y guardar captura exitosa en `/screenshots`.
-2. Ejecutar Postman Collection Runner y guardar captura con assertions PASS en `/screenshots`.
-3. Crear repositorio privado.
-4. Agregar los colaboradores solicitados en el documento del reto.
+1. Crear repositorio privado.
+2. Agregar los colaboradores solicitados en el documento del reto.
 
 
 ## V24 - Clave dinámica / OTP
@@ -407,6 +405,18 @@ Ejecución exitosa del escenario automatizado de envío de dinero en Ria Money T
 
 ![Resultado ejecución Selenium y Cucumber](screenshots/selenium-test-result.png)
 
+### Postman Collection Runner — API GET/POST
+
+Ejecución exitosa de la colección Postman incluida en el proyecto.
+
+**Resultado:**
+- 2 requests ejecutados.
+- 2 requests aprobados.
+- 4 assertions ejecutadas.
+- 4 assertions aprobadas.
+
+![Resultado ejecución Postman Collection Runner](screenshots/postman-collection-runner-result.png)
+
 ## Ejecución del proyecto
 
 Para ejecutar la automatización, abrir una terminal desde la raíz del proyecto y seguir los siguientes pasos:
@@ -426,6 +436,14 @@ npm run test:send-money
 ```
 
 Este comando ejecuta el escenario automatizado E2E de envío de dinero utilizando Selenium WebDriver y Cucumber.
+
+### 3. Ejecutar colección Postman y generar evidencia
+
+```bash
+npm run test:postman
+```
+
+Este comando ejecuta la colección Postman con Newman y genera la evidencia en `/screenshots`.
 
 
 ## Resumen de transferencia en consola

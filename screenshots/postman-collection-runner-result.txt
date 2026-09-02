@@ -1,0 +1,17 @@
+Ria QA Challenge - QA Engineer Test 6
+
+Requests: 2 executed, 0 failed
+Assertions: 4 executed, 0 failed
+Test scripts: 2 executed, 0 failed
+
+GET - JSONPlaceholder Posts
+Status: 200
+PASS - Status code is 200 OK
+PASS - All title and body fields have content and none contain zombie
+
+POST - httpbin Topping Validation
+Status: 200
+PASS - Status code is 200 or 201
+PASS - Validate toppings and absence of chicken
+
+Failures: 0

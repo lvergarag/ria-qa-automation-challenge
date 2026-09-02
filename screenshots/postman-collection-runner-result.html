@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Postman Collection Runner Evidence</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #17202a;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      border-bottom: 4px solid #ff6c37;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+    .subtitle {
+      margin: 0;
+      color: #4f5f6f;
+      font-size: 15px;
+    }
+    .badge {
+      min-width: 104px;
+      border-radius: 6px;
+      background: #0e8f54;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 14px 18px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+    .metric {
+      background: #fff;
+      border: 1px solid #d8dee4;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 4px;
+    }
+    .metric span {
+      color: #5f6b7a;
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #d8dee4;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th,
+    td {
+      border-bottom: 1px solid #e5e9ef;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #263238;
+      color: #fff;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    pre {
+      white-space: pre-wrap;
+      background: #101820;
+      color: #f2f5f8;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 380px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Postman Collection Runner</h1>
+        <p class="subtitle">Ria QA Challenge - QA Engineer Test 6</p>
+      </div>
+      <div class="badge">PASS</div>
+    </header>
+
+    <section class="grid">
+      <div class="metric"><strong>2</strong><span>Requests</span></div>
+      <div class="metric"><strong>0</strong><span>Requests fallidas</span></div>
+      <div class="metric"><strong>4</strong><span>Assertions</span></div>
+      <div class="metric"><strong>0</strong><span>Assertions fallidas</span></div>
+    </section>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Request</th>
+          <th>Status</th>
+          <th>Assertions</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>GET - JSONPlaceholder Posts</td>
+        <td>200</td>
+        <td>PASS - Status code is 200 OK<br>PASS - All title and body fields have content and none contain zombie</td>
+      </tr>
+    
+      <tr>
+        <td>POST - httpbin Topping Validation</td>
+        <td>200</td>
+        <td>PASS - Status code is 200 or 201<br>PASS - Validate toppings and absence of chicken</td>
+      </tr>
+    </tbody>
+    </table>
+
+    <h2>Salida Newman</h2>
+    <pre>Ria QA Challenge - QA Engineer Test 6
+
+Requests: 2 executed, 0 failed
+Assertions: 4 executed, 0 failed
+Test scripts: 2 executed, 0 failed
+
+GET - JSONPlaceholder Posts
+Status: 200
+PASS - Status code is 200 OK
+PASS - All title and body fields have content and none contain zombie
+
+POST - httpbin Topping Validation
+Status: 200
+PASS - Status code is 200 or 201
+PASS - Validate toppings and absence of chicken
+
+Failures: 0</pre>
+  </main>
+</body>
+</html>
