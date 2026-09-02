@@ -203,6 +203,7 @@ class RiaLoginPage {
       const url = (await this.driver.getCurrentUrl()).toLowerCase();
 
       if (
+        url.includes('/registration') ||
         url.includes('country-selection') ||
         url.includes('/country') ||
         url.includes('select-country') ||
@@ -216,6 +217,7 @@ class RiaLoginPage {
           "//*[contains(normalize-space(.),'Selecciona tu país') " +
           "or contains(normalize-space(.),'Selecciona el país') " +
           "or contains(normalize-space(.),'selección de país') " +
+          "or contains(normalize-space(.),'Elige un país') " +
           "or contains(normalize-space(.),'Select your country') " +
           "or contains(normalize-space(.),'Choose your country')]"
         )
