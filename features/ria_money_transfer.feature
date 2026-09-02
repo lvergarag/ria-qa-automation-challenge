@@ -47,6 +47,10 @@ Característica: Ria Money Transfer - QA Engineer Test 6
     Cuando ingresa el correo configurado
     Y ingresa la contraseña configurada
     Y presiona Iniciar sesión
+    Entonces espera el OTP enviado automáticamente y el usuario ingresa manualmente los 6 dígitos
+    Cuando valida la clave dinámica
+    Entonces aparece la pregunta para recordar este dispositivo
+    Y selecciona No para no recordar este dispositivo
     Entonces accede al área autenticada de Ria
 
 

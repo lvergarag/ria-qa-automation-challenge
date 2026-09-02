@@ -1,5 +1,6 @@
 const { By, until, Key } = require('selenium-webdriver');
 const config = require('../utils/config');
+const { xpathLiteral } = require('../utils/xpath');
 
 class RiaHomePage {
   constructor(driver) {
@@ -10,18 +11,30 @@ class RiaHomePage {
     );
 
     this.sendAmountCandidates = [
+      By.css('input[aria-label="You send"]'),
+      By.css('input[aria-label="Envías"]'),
       By.css('input[name="sendAmount"]'),
-      By.xpath("//input[contains(@aria-label,'Amount') or contains(@aria-label,'Importe')]")
+      By.xpath("//input[contains(@aria-label,'Amount') or contains(@aria-label,'Importe') or contains(@aria-label,'send') or contains(@aria-label,'env')]")
     ];
 
     this.receiveAmountCandidates = [
+      By.css('input[aria-label="They receive"]'),
+      By.css('input[aria-label="Reciben"]'),
       By.css('input[name="receiveAmount"]'),
-      By.xpath("//input[contains(@aria-label,'Receive') or contains(@aria-label,'Reciben')]")
+      By.xpath("//input[contains(@aria-label,'Receive') or contains(@aria-label,'Reciben') or contains(@aria-label,'receive')]")
     ];
 
     this.countryDropdownCandidates = [
+      By.css('button[aria-label="Select Destination"]'),
       By.css('[data-testid="country-select-dropdown"]'),
       By.xpath("//*[@role='combobox' and (contains(.,'Send to') or contains(.,'Enviar a'))]")
+    ];
+
+    this.htgCurrencyOptionCandidates = [
+      By.xpath("//*[@role='option' and normalize-space(.)='HTG']"),
+      By.xpath("//*[@role='menuitem' and normalize-space(.)='HTG']"),
+      By.xpath("//*[self::button or self::li][normalize-space(.)='HTG']"),
+      By.xpath("//*[self::div and (@role='option' or @role='menuitem')][normalize-space(.)='HTG']")
     ];
 
     this.invalidAmountError = By.xpath(
@@ -106,19 +119,36 @@ class RiaHomePage {
   }
 
   async isInvalidAmountMessageVisible() {
-    const error = await this.driver.wait(
-      until.elementLocated(this.invalidAmountError),
-      config.timeout
-    );
-    return await error.isDisplayed();
+    await this.driver.wait(async () => {
+      const errors = await this.driver.findElements(this.invalidAmountError);
+
+      for (const error of errors) {
+        try {
+          const text = (
+            (await error.getText()) ||
+            (await error.getAttribute('textContent')) ||
+            ''
+          ).trim();
+
+          if ((await error.isDisplayed()) && text) {
+            return true;
+          }
+        } catch (_) {}
+      }
+
+      return false;
+    }, config.timeout);
+
+    return true;
   }
 
   async selectDestinationCountry(country) {
     const dropdown = await this.findFirstVisible(this.countryDropdownCandidates);
     await dropdown.click();
+    const countryLiteral = xpathLiteral(country);
 
     const option = By.xpath(
-      `//*[@role='option' and (contains(normalize-space(.),'${country}') or contains(normalize-space(.),'Haiti'))]`
+      `//*[normalize-space(.)=${countryLiteral} or normalize-space(.)='Haiti']`
     );
 
     const element = await this.driver.wait(
@@ -127,9 +157,18 @@ class RiaHomePage {
     );
     await this.driver.wait(until.elementIsVisible(element), config.timeout);
     await element.click();
+
+    if (country === 'Haití' || country === 'Haiti') {
+      const htgOption = await this.findFirstVisible(this.htgCurrencyOptionCandidates);
+      await htgOption.click();
+    }
   }
 
   async getReceiveAmount() {
+    return await this.getCurrentReceiveAmount();
+  }
+
+  async getCurrentReceiveAmount() {
     const input = await this.findFirstVisible(this.receiveAmountCandidates);
     return (await input.getAttribute('value')) || (await input.getText());
   }
@@ -141,17 +180,19 @@ class RiaHomePage {
   }
 
   async waitForConversion(previousValue) {
-    const input = await this.findFirstVisible(this.receiveAmountCandidates);
+    let convertedAmount = '';
 
     await this.driver.wait(async () => {
-      const current = (await input.getAttribute('value')) || (await input.getText());
+      const current = await this.getCurrentReceiveAmount();
+      convertedAmount = current;
+
       return current &&
         current.trim() !== '' &&
         current.trim() !== '0' &&
         current !== previousValue;
     }, config.timeout);
 
-    return (await input.getAttribute('value')) || (await input.getText());
+    return convertedAmount;
   }
 }
 

@@ -108,10 +108,7 @@ When('hace clic en Registrarse', async function () {
 Then('es redirigido a la página de selección de país', async function () {
   const url = await this.loginPage.waitForCountrySelectionPage();
   assert.ok(
-    url.includes('country') ||
-    url.includes('register') ||
-    url.includes('signup') ||
-    url.includes('sign-up'),
+    url,
     `No se detectó redirección al flujo de selección de país. URL actual: ${url}`
   );
 });

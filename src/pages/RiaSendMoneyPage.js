@@ -1,5 +1,6 @@
 const { By, until, Key } = require('selenium-webdriver');
 const config = require('../utils/config');
+const { xpathLiteral } = require('../utils/xpath');
 
 class RiaSendMoneyPage {
   constructor(driver) {
@@ -28,6 +29,16 @@ class RiaSendMoneyPage {
     this.receiveAmountCandidates = [
       By.xpath("//*[contains(normalize-space(.),'Los destinatarios reciben')]/following::input[1]"),
       By.css('input[name="receiveAmount"]')
+    ];
+
+    this.invalidAmountMessageCandidates = [
+      By.css('[role="alert"]'),
+      By.css('[aria-live="polite"]'),
+      By.css('[aria-live="assertive"]'),
+      By.xpath("//*[contains(normalize-space(.),'Ingresa un monto mayor')]"),
+      By.xpath("//*[contains(normalize-space(.),'Introduzca un importe vÃ¡lido')]"),
+      By.xpath("//*[contains(normalize-space(.),'Enter a valid amount')]"),
+      By.xpath("//*[contains(normalize-space(.),'amount greater')]")
     ];
 
     this.exchangeRateCandidates = [
@@ -73,6 +84,7 @@ class RiaSendMoneyPage {
 
   async selectDestinationCountry(country) {
     await this.waitForPage();
+    const countryLiteral = xpathLiteral(country);
 
     const dropdown = await this.findFirstVisible(this.countryDropdownCandidates);
 
@@ -88,8 +100,8 @@ class RiaSendMoneyPage {
     }
 
     const optionCandidates = [
-      By.xpath(`//*[@role='option' and (contains(normalize-space(.),'${country}') or contains(normalize-space(.),'Haiti'))]`),
-      By.xpath(`//*[self::button or self::li or self::div][contains(normalize-space(.),'${country}') or contains(normalize-space(.),'Haiti')]`)
+      By.xpath(`//*[@role='option' and (contains(normalize-space(.),${countryLiteral}) or contains(normalize-space(.),'Haiti'))]`),
+      By.xpath(`//*[self::button or self::li or self::div][contains(normalize-space(.),${countryLiteral}) or contains(normalize-space(.),'Haiti')]`)
     ];
 
     const option = await this.findFirstVisible(optionCandidates, config.timeout);
@@ -108,7 +120,7 @@ class RiaSendMoneyPage {
     // Solo confirmamos que el país quedó visible. NO esperamos HTG aquí.
     await this.driver.wait(async () => {
       const matches = await this.driver.findElements(
-        By.xpath(`//*[contains(normalize-space(.),'${country}') or contains(normalize-space(.),'Haiti')]`)
+        By.xpath(`//*[contains(normalize-space(.),${countryLiteral}) or contains(normalize-space(.),'Haiti')]`)
       );
 
       for (const el of matches) {
@@ -179,6 +191,37 @@ class RiaSendMoneyPage {
     return raw.replace(/[^\d]/g, '');
   }
 
+  async getInvalidAmountMessage() {
+    let lastText = '';
+
+    await this.driver.wait(async () => {
+      for (const locator of this.invalidAmountMessageCandidates) {
+        const elements = await this.driver.findElements(locator);
+
+        for (const element of elements) {
+          try {
+            if (!(await element.isDisplayed())) continue;
+
+            const text = (
+              (await element.getText()) ||
+              (await element.getAttribute('textContent')) ||
+              ''
+            ).trim();
+
+            if (text) {
+              lastText = text;
+              return true;
+            }
+          } catch (_) {}
+        }
+      }
+
+      return false;
+    }, config.timeout);
+
+    return lastText;
+  }
+
   async isSendCurrencyCLP() {
     const elements = await this.driver.findElements(this.clpCurrency);
 
@@ -191,6 +234,7 @@ class RiaSendMoneyPage {
   }
 
   async selectReceiveCurrency(currency) {
+    const currencyLiteral = xpathLiteral(currency);
     const dropdown = await this.findFirstVisible(this.receiveCurrencyDropdownCandidates);
 
     await this.driver.executeScript(
@@ -205,8 +249,8 @@ class RiaSendMoneyPage {
     }
 
     const optionCandidates = [
-      By.xpath(`//*[@role='option' and contains(normalize-space(.),'${currency}')]`),
-      By.xpath(`//*[self::button or self::li or self::div][contains(normalize-space(.),'${currency}')]`)
+      By.xpath(`//*[@role='option' and contains(normalize-space(.),${currencyLiteral})]`),
+      By.xpath(`//*[self::button or self::li or self::div][contains(normalize-space(.),${currencyLiteral})]`)
     ];
 
     const option = await this.findFirstVisible(optionCandidates, config.timeout);

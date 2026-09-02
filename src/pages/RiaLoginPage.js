@@ -204,19 +204,32 @@ class RiaLoginPage {
 
       if (
         url.includes('country-selection') ||
-        url.includes('country') ||
-        url.includes('register') ||
-        url.includes('signup') ||
-        url.includes('sign-up')
+        url.includes('/country') ||
+        url.includes('select-country') ||
+        url.includes('country-of-residence')
       ) {
         return true;
       }
 
       const countryElements = await this.driver.findElements(
-        By.xpath("//*[contains(normalize-space(.),'país') or contains(normalize-space(.),'country')]")
+        By.xpath(
+          "//*[contains(normalize-space(.),'Selecciona tu país') " +
+          "or contains(normalize-space(.),'Selecciona el país') " +
+          "or contains(normalize-space(.),'selección de país') " +
+          "or contains(normalize-space(.),'Select your country') " +
+          "or contains(normalize-space(.),'Choose your country')]"
+        )
       );
 
-      return countryElements.length > 0;
+      for (const element of countryElements) {
+        try {
+          if (await element.isDisplayed()) {
+            return true;
+          }
+        } catch (_) {}
+      }
+
+      return false;
     }, config.timeout);
 
     return await this.driver.getCurrentUrl();
@@ -269,6 +282,21 @@ class RiaLoginPage {
   async waitForOtpInput() {
     await this.waitForOtpPage();
 
+    await this.driver.wait(async () => {
+      const inputs = await this.getVisibleOtpInputs();
+      return inputs.length > 0;
+    }, config.timeout);
+
+    const inputs = await this.getVisibleOtpInputs();
+
+    if (inputs.length > 0) {
+      return inputs;
+    }
+
+    throw new Error('No se encontraron los campos visibles de la clave dinámica.');
+  }
+
+  async getVisibleOtpInputs() {
     for (const locator of this.otpInputCandidates) {
       try {
         const elements = await this.driver.findElements(locator);
@@ -288,19 +316,22 @@ class RiaLoginPage {
       } catch (_) {}
     }
 
-    throw new Error('No se encontraron los campos visibles de la clave dinámica.');
+    return [];
   }
 
   async waitForManualOtpEntry() {
-    const inputs = await this.waitForOtpInput();
+    await this.waitForOtpInput();
+    const deadline = Date.now() + config.otpTimeout;
+    const timeoutMinutes = Math.round(config.otpTimeout / 60000);
 
     console.log(
-      '[RIA] Esperando el OTP sin límite práctico de tiempo. ' +
+      `[RIA] Esperando el OTP hasta ${timeoutMinutes} minuto(s). ` +
       'Cuando llegue el SMS, ingresa manualmente los 6 dígitos.'
     );
 
-    while (true) {
+    while (Date.now() < deadline) {
       try {
+        const inputs = await this.getVisibleOtpInputs();
         const values = [];
 
         for (const input of inputs) {
@@ -311,7 +342,7 @@ class RiaLoginPage {
 
         if (totalDigits.length >= 6) {
           console.log('[RIA] Se detectaron los 6 dígitos del OTP. Continuando...');
-          break;
+          return;
         }
       } catch (_) {
         // El DOM puede refrescarse durante la espera; se reintenta.
@@ -319,6 +350,10 @@ class RiaLoginPage {
 
       await this.driver.sleep(1000);
     }
+
+    throw new Error(
+      `No se detectaron los 6 digitos del OTP dentro de ${timeoutMinutes} minuto(s).`
+    );
   }
 
   async validateOtp() {

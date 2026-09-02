@@ -8,11 +8,12 @@ const {
 } = require('@cucumber/cucumber');
 
 const { Builder } = require('selenium-webdriver');
+const config = require('../utils/config');
 const RiaHomePage = require('../pages/RiaHomePage');
 const RiaLoginPage = require('../pages/RiaLoginPage');
 const RiaSendMoneyPage = require('../pages/RiaSendMoneyPage');
 
-setDefaultTimeout(2147483647);
+setDefaultTimeout(Math.max(config.timeout, config.otpTimeout) + 120000);
 
 Before(async function () {
   this.driver = await new Builder()
