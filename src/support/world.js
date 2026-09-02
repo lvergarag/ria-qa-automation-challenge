@@ -14,6 +14,7 @@ class CustomWorld {
 
     this.initialReceiveAmount = null;
     this.convertedAmount = null;
+    this.transferSummary = null;
     this.stepDelayMs = config.stepDelayMs;
   }
 }

@@ -422,7 +422,26 @@ Esperar hasta que finalice completamente la instalación de las dependencias.
 ### 2. Ejecutar el escenario automatizado
 
 ```bash
-npm run test:send-money
+list
 ```
 
 Este comando ejecuta el escenario automatizado E2E de envío de dinero utilizando Selenium WebDriver y Cucumber.
+
+
+## Resumen de transferencia en consola
+
+Al ejecutar el escenario `@sendmoney` con:
+
+```bash
+npm run test:send-money
+```
+
+la automatización muestra al final del flujo los valores reales obtenidos desde la pantalla de Ria:
+
+```text
+[RIA] Monto enviado: 25000 CLP
+[RIA] Tipo de cambio: 1 CLP = <valor mostrado> HTG
+[RIA] Monto recibido: <valor mostrado> HTG
+```
+
+El tipo de cambio se intenta leer directamente desde la interfaz. Si la página no lo expone como texto, se calcula la tasa efectiva usando únicamente el monto CLP y el monto HTG mostrados por Ria.
