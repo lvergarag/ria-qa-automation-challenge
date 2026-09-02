@@ -31,14 +31,16 @@ class RiaHomePage {
     ];
 
     this.htgCurrencyOptionCandidates = [
-      By.xpath("//*[@role='option' and normalize-space(.)='HTG']"),
-      By.xpath("//*[@role='menuitem' and normalize-space(.)='HTG']"),
-      By.xpath("//*[self::button or self::li][normalize-space(.)='HTG']"),
-      By.xpath("//*[self::div and (@role='option' or @role='menuitem')][normalize-space(.)='HTG']")
+      By.xpath("//*[@role='option' and contains(normalize-space(.),'HTG')]"),
+      By.xpath("//*[@role='menuitem' and contains(normalize-space(.),'HTG')]"),
+      By.xpath("//*[self::button or self::li][contains(normalize-space(.),'HTG')]"),
+      By.xpath("//*[self::div and (@role='option' or @role='menuitem')][contains(normalize-space(.),'HTG')]")
     ];
 
     this.invalidAmountError = By.xpath(
-      "//*[contains(normalize-space(.),'Introduzca un importe válido') or contains(normalize-space(.),'Enter a valid amount')]"
+      "//*[contains(normalize-space(.),'Introduzca un importe válido') " +
+      "or contains(normalize-space(.),'Enter a valid amount') " +
+      "or contains(normalize-space(.),'Enter an amount between')]"
     );
   }
 
@@ -50,14 +52,20 @@ class RiaHomePage {
     let lastError;
     for (const locator of candidates) {
       try {
-        const element = await this.driver.wait(
-          until.elementLocated(locator),
-          Math.min(timeout, 10000)
-        );
-        await this.driver.wait(
-          until.elementIsVisible(element),
-          Math.min(timeout, 10000)
-        );
+        const element = await this.driver.wait(async () => {
+          const elements = await this.driver.findElements(locator);
+
+          for (const candidate of elements) {
+            try {
+              if (await candidate.isDisplayed()) {
+                return candidate;
+              }
+            } catch (_) {}
+          }
+
+          return false;
+        }, Math.min(timeout, 10000));
+
         return element;
       } catch (error) {
         lastError = error;
@@ -91,12 +99,45 @@ class RiaHomePage {
 
   async getDestinationCurrency() {
     const candidates = [
+      By.xpath("//button[@aria-label='Select Destination' and contains(normalize-space(.),'HTG')]"),
       By.xpath("//*[normalize-space(.)='HTG']"),
-      By.xpath("//*[contains(normalize-space(.),'HTG')]")
+      By.xpath("//*[@role='option' and contains(normalize-space(.),'HTG')]")
     ];
 
     const element = await this.findFirstVisible(candidates);
     return (await element.getText()).trim();
+  }
+
+  async isDestinationButtonCurrency(currency) {
+    const buttons = await this.driver.findElements(
+      By.css('button[aria-label="Select Destination"]')
+    );
+
+    for (const button of buttons) {
+      try {
+        const text = await button.getText();
+        if ((await button.isDisplayed()) && text.includes(currency)) {
+          return true;
+        }
+      } catch (_) {}
+    }
+
+    return false;
+  }
+
+  async clickElement(element) {
+    await this.driver.executeScript(
+      "arguments[0].scrollIntoView({block:'center', inline:'center'});",
+      element
+    );
+
+    await this.driver.sleep(300);
+
+    try {
+      await element.click();
+    } catch (_) {
+      await this.driver.executeScript("arguments[0].click();", element);
+    }
   }
 
   async isConvertedAmountValid() {
@@ -148,7 +189,7 @@ class RiaHomePage {
     const countryLiteral = xpathLiteral(country);
 
     const option = By.xpath(
-      `//*[normalize-space(.)=${countryLiteral} or normalize-space(.)='Haiti']`
+      `//*[@role='option' and (contains(normalize-space(.),${countryLiteral}) or contains(normalize-space(.),'Haiti'))]`
     );
 
     const element = await this.driver.wait(
@@ -156,12 +197,24 @@ class RiaHomePage {
       config.timeout
     );
     await this.driver.wait(until.elementIsVisible(element), config.timeout);
-    await element.click();
+    await this.clickElement(element);
 
     if (country === 'Haití' || country === 'Haiti') {
-      const htgOption = await this.findFirstVisible(this.htgCurrencyOptionCandidates);
-      await htgOption.click();
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const htgOption = await this.findFirstVisible(this.htgCurrencyOptionCandidates);
+        await this.clickElement(htgOption);
+
+        await this.driver.sleep(1000);
+
+        if (await this.isDestinationButtonCurrency('HTG')) {
+          break;
+        }
+      }
     }
+
+    await this.driver.wait(async () => {
+      return await this.isDestinationButtonCurrency('HTG');
+    }, config.timeout);
   }
 
   async getReceiveAmount() {
