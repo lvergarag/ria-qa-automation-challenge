@@ -30,6 +30,12 @@ class RiaSendMoneyPage {
       By.css('input[name="receiveAmount"]')
     ];
 
+    this.exchangeRateCandidates = [
+      By.xpath("//*[contains(normalize-space(.),'1 CLP') and contains(normalize-space(.),'HTG')]"),
+      By.xpath("//*[contains(normalize-space(.),'Tarifa')]/following::*[contains(normalize-space(.),'CLP') and contains(normalize-space(.),'HTG')][1]"),
+      By.xpath("//*[contains(normalize-space(.),'tipo de cambio') or contains(normalize-space(.),'Tipo de cambio')][1]/following::*[contains(normalize-space(.),'CLP')][1]")
+    ];
+
     this.clpCurrency = By.xpath("//*[normalize-space(.)='CLP']");
     this.htgCurrency = By.xpath("//*[normalize-space(.)='HTG']");
   }
@@ -240,6 +246,131 @@ class RiaSendMoneyPage {
       const value = await this.findFirstVisible(candidates, config.timeout);
       return (await value.getText()).trim();
     }
+  }
+
+  normalizeNumericText(rawValue) {
+    const value = String(rawValue || '')
+      .replace(/\s/g, '')
+      .replace(/[^\d,.-]/g, '');
+
+    if (!value) return NaN;
+
+    const lastComma = value.lastIndexOf(',');
+    const lastDot = value.lastIndexOf('.');
+
+    if (lastComma >= 0 && lastDot >= 0) {
+      const decimalSeparator = lastComma > lastDot ? ',' : '.';
+      const thousandSeparator = decimalSeparator === ',' ? '.' : ',';
+      const normalized = value
+        .split(thousandSeparator).join('')
+        .replace(decimalSeparator, '.');
+      return Number(normalized);
+    }
+
+    const separator = lastComma >= 0 ? ',' : (lastDot >= 0 ? '.' : null);
+
+    if (!separator) return Number(value);
+
+    const parts = value.split(separator);
+    const decimals = parts[parts.length - 1];
+
+    if (parts.length === 2 && (value.startsWith('0' + separator) || decimals.length <= 2)) {
+      return Number(value.replace(separator, '.'));
+    }
+
+    return Number(parts.join(''));
+  }
+
+  async getExchangeRateText() {
+    for (const locator of this.exchangeRateCandidates) {
+      try {
+        const elements = await this.driver.findElements(locator);
+
+        for (const element of elements) {
+          try {
+            if (!(await element.isDisplayed())) continue;
+
+            const text = ((await element.getText()) || '').trim();
+            if (!text) continue;
+
+            const compact = text.replace(/\s+/g, ' ');
+            const segmentMatch = compact.match(/1\s*CLP\s*=\s*(.*?)\s*HTG/i);
+
+            if (segmentMatch) {
+              const numericParts = segmentMatch[1].match(/\d+(?:[.,]\d+)?/g);
+              if (numericParts && numericParts.length) {
+                return `1 CLP = ${numericParts[numericParts.length - 1]} HTG`;
+              }
+            }
+
+            if (/CLP/i.test(compact) && /HTG/i.test(compact)) {
+              return compact;
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    // Fallback: revisar el texto visible de la página completa.
+    try {
+      const bodyText = await this.driver.findElement(By.css('body')).getText();
+      const lines = String(bodyText).split(/\r?\n/);
+
+      for (const line of lines) {
+        if (!/CLP/i.test(line) || !/HTG/i.test(line)) continue;
+
+        const compact = line.replace(/\s+/g, ' ').trim();
+        const segmentMatch = compact.match(/1\s*CLP\s*=\s*(.*?)\s*HTG/i);
+
+        if (segmentMatch) {
+          const numericParts = segmentMatch[1].match(/\d+(?:[.,]\d+)?/g);
+          if (numericParts && numericParts.length) {
+            return `1 CLP = ${numericParts[numericParts.length - 1]} HTG`;
+          }
+        }
+      }
+    } catch (_) {}
+
+    return '';
+  }
+
+  async getTransferSummary() {
+    const sendAmountRaw = await this.getSendAmountValue();
+    const receiveAmountRaw = await this.getReceiveAmountText();
+    let exchangeRateText = await this.getExchangeRateText();
+
+    // Si la interfaz no expone la tarifa como texto, calculamos la tasa efectiva
+    // únicamente a partir de los valores reales mostrados por Ria.
+    if (!exchangeRateText) {
+      const sendAmount = this.normalizeNumericText(sendAmountRaw);
+      const receiveAmount = this.normalizeNumericText(receiveAmountRaw);
+
+      if (
+        Number.isFinite(sendAmount) &&
+        sendAmount > 0 &&
+        Number.isFinite(receiveAmount) &&
+        receiveAmount > 0
+      ) {
+        const calculatedRate = receiveAmount / sendAmount;
+        exchangeRateText = `1 CLP = ${calculatedRate.toFixed(6)} HTG (calculado desde los valores mostrados)`;
+      }
+    }
+
+    return {
+      sendAmountCLP: sendAmountRaw,
+      exchangeRateHTG: exchangeRateText,
+      receiveAmountHTG: receiveAmountRaw
+    };
+  }
+
+  async logTransferSummary() {
+    const summary = await this.getTransferSummary();
+
+    console.log(`[RIA] Monto enviado: ${summary.sendAmountCLP} CLP`);
+    console.log(`[RIA] Tipo de cambio: ${summary.exchangeRateHTG || 'No disponible'} `);
+    console.log(`[RIA] Monto recibido: ${summary.receiveAmountHTG} HTG`);
+
+    return summary;
   }
 
   async isConvertedAmountValid() {

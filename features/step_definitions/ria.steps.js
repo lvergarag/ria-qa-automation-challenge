@@ -198,6 +198,20 @@ Then('se actualiza el monto convertido en la pantalla Enviar dinero', async func
     await this.sendMoneyPage.isConvertedAmountValid(),
     'El monto convertido está vacío, es cero o no es válido.'
   );
+
+  const summary = await this.sendMoneyPage.logTransferSummary();
+
+  assert.ok(
+    summary.sendAmountCLP && summary.sendAmountCLP !== '0',
+    'No fue posible obtener el monto enviado en CLP.'
+  );
+
+  assert.ok(
+    summary.receiveAmountHTG && summary.receiveAmountHTG.trim() !== '' && summary.receiveAmountHTG.trim() !== '0',
+    'No fue posible obtener el monto recibido en HTG.'
+  );
+
+  this.transferSummary = summary;
 });
 
 
