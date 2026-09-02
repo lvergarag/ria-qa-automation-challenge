@@ -2,6 +2,9 @@
   "name": "ria-qa-automation-challenge",
   "version": "41.0.0",
   "description": "Ria QA Challenge - clean Selenium WebDriver automation with Chrome",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "test": "cucumber-js",
     "test:login": "cucumber-js --tags @login",

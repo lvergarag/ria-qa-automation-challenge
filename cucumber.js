@@ -5,7 +5,6 @@ module.exports = {
       "features/step_definitions/*.js"
     ],
     paths: ["features/**/*.feature"],
-    format: ["progress"],
-    publishQuiet: true
+    format: ["progress"]
   }
 };

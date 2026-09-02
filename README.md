@@ -422,7 +422,7 @@ Esperar hasta que finalice completamente la instalación de las dependencias.
 ### 2. Ejecutar el escenario automatizado
 
 ```bash
-list
+npm run test:send-money
 ```
 
 Este comando ejecuta el escenario automatizado E2E de envío de dinero utilizando Selenium WebDriver y Cucumber.
